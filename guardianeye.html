@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GUARDIANEYE</title> 
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+* { margin:0; padding:0; box-sizing:border-box; font-family:'Poppins',sans-serif; }
+body { background-color:#0f172a; color:white; }
+
+nav { display:flex; justify-content:space-between; align-items:center; padding:15px 40px; background:#1e293b; }
+nav h1 { color:#ef4444; }
+
+.section { display:none; padding:60px 20px; text-align:center; }
+.active { display:block; }
+
+.hero { height:80vh; display:flex; flex-direction:column; justify-content:center; align-items:center; }
+.hero h2 { font-size:42px; margin-bottom:20px; }
+.hero p { color:#cbd5e1; margin-bottom:30px; }
+
+button {
+    padding:10px 20px;
+    border-radius:6px;
+    border:none;
+    background:#ef4444;
+    color:white;
+    cursor:pointer;
+}
+button:hover { background:#dc2626; }
+
+.card {
+    background:#1e293b;
+    padding:30px;
+    border-radius:12px;
+    width:100%;
+    margin:20px auto;
+}
+
+input, select {
+    width:100%;
+    padding:10px;
+    margin:10px 0;
+    border-radius:6px;
+    border:none;
+}
+
+.link { color:#60a5fa; cursor:pointer; font-size:14px; }
+
+#loginModal {
+    position:fixed;
+    top:0; left:0;
+    width:100%; height:100%;
+    background:rgba(0,0,0,0.85);
+    display:flex;
+    justify-content:center;
+    align-items:center;
+}
+
+.login-box {
+    background:#1e293b;
+    padding:30px;
+    border-radius:12px;
+    width:350px;
+    text-align:center;
+}
+
+#policeAlert {
+    position:fixed;
+    top:0;
+    width:100%;
+    background:#ef4444;
+    color:white;
+    padding:15px;
+    text-align:center;
+    font-weight:bold;
+    display:none;
+    animation: blink 1s infinite;
+}
+
+@keyframes blink {
+    0% {opacity:1;}
+    50% {opacity:0.4;}
+    100% {opacity:1;}
+}
+
+.officer-img {
+    width:120px;
+    height:120px;
+    border-radius:50%;
+    object-fit:cover;
+    border:3px solid #ef4444;
+    margin-bottom:15px;
+}
+</style>
+</head>
+
+<body>
+
+<div id="policeAlert">🚨 ALERT SENT TO NEAREST POLICE STATION 🚔</div>
+
+<!-- LOGIN MODAL -->
+<div id="loginModal">
+    <div class="login-box">
+        <h2>Login</h2>
+        <input type="text" id="loginInput" placeholder="Enter Email or Phone Number">
+        <button onclick="sendCode()">Send Verification Code</button>
+
+        <div id="verifySection" style="display:none;">
+            <input type="text" id="verifyCode" placeholder="Enter Security Code / OTP">
+            
+            <!-- Aadhaar Added -->
+            <input type="text" id="aadhaarNumber" placeholder="Enter Aadhaar ID (12 digits)" maxlength="12">
+
+            <button onclick="verifyUser()">Verify & Login</button>
+        </div>
+
+        <p class="link" onclick="alreadyRegistered()">Already Registered?</p>
+    </div>
+</div>
+
+<nav>
+    <h1>🚨 GAURDIANEYE</h1>
+    <span onclick="showSection('dashboardPage')" style="cursor:pointer; font-size:22px;">📊</span>
+</nav>
+
+<!-- HOME -->
+<div id="home" class="section active">
+    <div class="hero">
+        <h2>AI Powered Real-Time Child Protection</h2>
+        <p>Connecting Parents, Police & AI Cameras to Protect Children Faster</p>
+        <button onclick="showSection('reportPage')">⚠️ Emergency Alert</button>
+    </div>
+</div>
+
+<!-- REPORT PAGE -->
+<div id="reportPage" class="section">
+
+<div class="card">
+<h2>Details</h2>
+<input type="text" id="childName" placeholder="Enter Name">
+<input type="number" id="childAge" placeholder="Enter Age">
+<select id="childGender">
+<option value="">Select Gender</option>
+<option>Boy</option>
+<option>Girl</option>
+</select>
+<input type="text" id="childHeight" placeholder="Enter Height">
+<input type="file">
+</div>
+
+<div class="card">
+<h2>Last Seen Details</h2>
+<input type="text" id="location" placeholder="Location">
+<button onclick="getLocation()">Turn On GPS</button>
+<input type="time" id="time">
+<input type="date" id="date">
+</div>
+
+<div class="card">
+<h2>Vehicle Description (Optional)</h2>
+<select id="vehicleType">
+<option value="">Select Vehicle Type</option>
+<option>2 Wheeler</option>
+<option>3 Wheeler</option>
+<option>4 Wheeler</option>
+<option>Don't Know</option>
+</select>
+<input type="text" id="vehicleNumber" placeholder="Vehicle Number">
+<input type="text" id="vehicleColour" placeholder="Vehicle Colour">
+<input type="text" id="vehicleModel" placeholder="Vehicle Model">
+</div>
+
+<button onclick="submitReport()">Submit Report</button>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dashboardPage" class="section">
+
+<button onclick="showSection('home')">⬅ Back</button>
+
+<div style="display:flex; gap:20px; flex-wrap:wrap; margin-top:20px;">
+
+<div style="flex:2;">
+
+<div class="card">
+<h3>Live Case Map (Current Location)</h3>
+<iframe id="mapFrame" width="100%" height="300" style="border-radius:10px;" loading="lazy"></iframe>
+</div>
+
+<div class="card">
+<h3>Emergency Case Statistics</h3>
+<canvas id="caseChart"></canvas>
+</div>
+
+</div>
+
+<div style="flex:1;">
+
+<div class="card" style="text-align:center;">
+<img src="https://i.imgur.com/6VBx3io.png" class="officer-img">
+<h3>Inspector Arjun Kumar</h3>
+<p>District: Central Zone</p>
+<p>Experience: 12 Years</p>
+</div>
+
+<div class="card">
+<h3>Cases Handled</h3>
+<ul style="text-align:left; line-height:1.8;">
+<li>✔ Case #1023 - Missing Child (Resolved)</li>
+<li>✔ Case #1056 - Suspicious Vehicle</li>
+<li>✔ Case #1108 - AI Detection Alert</li>
+<li>✔ Case #1120 - Kidnap Attempt Prevented</li>
+</ul>
+</div>
+
+</div>
+
+</div>
+</div>
+
+<script>
+let generatedOTP = "";
+
+function sendCode() {
+const input = document.getElementById("loginInput").value;
+if (input === "") { alert("Enter Email or Phone"); return; }
+generatedOTP = "123456";
+alert("Demo OTP: 123456");
+document.getElementById("verifySection").style.display = "block";
+}
+
+function verifyUser() {
+const userCode = document.getElementById("verifyCode").value;
+const aadhaar = document.getElementById("aadhaarNumber").value;
+
+if (userCode !== generatedOTP) {
+alert("Invalid OTP");
+return;
+}
+
+if (aadhaar.length !== 12 || isNaN(aadhaar)) {
+alert("Enter valid 12-digit Aadhaar ID");
+return;
+}
+
+alert("Login Successful!");
+document.getElementById("loginModal").style.display = "none";
+}
+
+function alreadyRegistered() {
+alert("Welcome Back!");
+document.getElementById("loginModal").style.display = "none";
+}
+
+function showSection(section) {
+document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
+document.getElementById(section).classList.add('active');
+if(section === "dashboardPage"){
+loadMap();
+loadGraph();
+}
+}
+
+function getLocation() {
+if (navigator.geolocation) {
+navigator.geolocation.getCurrentPosition(function(position) {
+document.getElementById("location").value =
+position.coords.latitude + ", " + position.coords.longitude;
+});
+}
+}
+
+function loadMap(){
+if (navigator.geolocation) {
+navigator.geolocation.getCurrentPosition(function(position) {
+let lat = position.coords.latitude;
+let lng = position.coords.longitude;
+document.getElementById("mapFrame").src =
+`https://maps.google.com/maps?q=${lat},${lng}&z=15&output=embed`;
+});
+}
+}
+
+function loadGraph(){
+const ctx = document.getElementById('caseChart').getContext('2d');
+new Chart(ctx, {
+type: 'bar',
+data: {
+labels: ['Active Cases','Resolved Cases','Today Alerts'],
+datasets: [{
+label: 'Number of Cases',
+data: [18, 14, 6],
+backgroundColor: ['#ef4444','#22c55e','#3b82f6']
+}]
+}
+});
+}
+
+function submitReport() {
+document.getElementById("policeAlert").style.display = "block";
+setTimeout(()=>{
+document.getElementById("policeAlert").style.display = "none";
+alert("Report Submitted Successfully!");
+showSection('home');
+},3000);
+}
+</script>
+
+</body>
+</html>
